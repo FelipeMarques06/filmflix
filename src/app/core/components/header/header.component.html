@@ -6,7 +6,7 @@
   <div *ngIf="user$ | async as user; else unlogged" class="user-menu">
     <img
       class="avatar"
-      [src]="user.photoURL"
+      [src]="user.profile"
       alt="Avatar"
       routerLink="/perfil"
       routerLinkActive="avatar-active"
