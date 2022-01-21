@@ -3,8 +3,16 @@ import {
   Auth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  User as FirebaseUser,
 } from '@angular/fire/auth';
-import { collection, Firestore, doc, setDoc } from '@angular/fire/firestore';
+import {
+  collection,
+  Firestore,
+  doc,
+  setDoc,
+  getDoc,
+} from '@angular/fire/firestore';
+import { updateProfile } from '@firebase/auth';
 import { updateDoc } from '@firebase/firestore';
 import { user } from 'rxfire/auth';
 import { docData } from 'rxfire/firestore';
@@ -17,6 +25,16 @@ import { User } from '../../models/user';
 export class AuthService {
   constructor(private auth: Auth, private db: Firestore) {}
 
+  firebaseUser: FirebaseUser | null = null;
+
+  get logged() {
+    return user(this.auth).pipe(
+      tap((user) => {
+        this.firebaseUser = user;
+      })
+    );
+  }
+
   login(email: string, password: string) {
     return from(signInWithEmailAndPassword(this.auth, email, password));
   }
@@ -27,6 +45,11 @@ export class AuthService {
     ).pipe(
       tap((creds) => {
         payload.uid = creds.user.uid;
+
+        updateProfile(creds.user, {
+          displayName: payload.username,
+          photoURL: payload.profile,
+        });
 
         const users = collection(this.db, 'users');
         const userDoc = doc(users, payload.uid);
@@ -47,9 +70,9 @@ export class AuthService {
     );
   }
 
-  private getUserData(uid: string) {
+  getUserData(uid?: string) {
     const users = collection(this.db, 'users');
-    const userDoc = doc(users, uid);
+    const userDoc = doc(users, uid ? uid : this.firebaseUser?.uid);
 
     return docData(userDoc).pipe(
       map(
@@ -61,6 +84,11 @@ export class AuthService {
   update(user: User) {
     const users = collection(this.db, 'users');
     const userDoc = doc(users, user.uid);
+
+    updateProfile(this.firebaseUser!, {
+      photoURL: user.profile,
+      displayName: user.username,
+    });
 
     return from(updateDoc(userDoc, user as any));
   }

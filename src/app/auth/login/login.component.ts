@@ -19,7 +19,7 @@ export class LoginComponent implements OnInit {
     this.authService.login(email, password).subscribe({
       next: (creds) => {
         // TODO: Verificar o bug do clique
-        console.log("foi")
+        console.log('foi');
       },
       error: (err) => {
         let message = 'Ocorreu um erro';
